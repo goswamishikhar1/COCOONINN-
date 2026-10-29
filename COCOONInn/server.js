@@ -7,11 +7,22 @@ const path = require('path');
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// PostgreSQL connection: use Supabase's transaction pooler URI.
+// Serve the existing homepage from the project root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Serve favicon
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+
+// PostgreSQL / Supabase configuration
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is missing');
 }
@@ -24,17 +35,19 @@ const pool = new Pool({
   idleTimeoutMillis: 10000
 });
 
-// Check the database connection without creating tables at startup.
+// Health check
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({
+
+    res.status(200).json({
       success: true,
       message: 'COCOONInn API and database are running',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Database health check failed:', error.message);
+
     res.status(503).json({
       success: false,
       message: 'Database connection failed'
@@ -98,10 +111,15 @@ app.post('/api/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO public.users (full_name, email, mobile, password)
+      `INSERT INTO public.users
+        (full_name, email, mobile, password)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, full_name AS "fullName", email, mobile,
-                 "createdAt" AS "createdAt"`,
+       RETURNING
+         id,
+         full_name AS "fullName",
+         email,
+         mobile,
+         "createdAt" AS "createdAt"`,
       [cleanName, cleanEmail, cleanMobile, hashedPassword]
     );
 
@@ -119,6 +137,7 @@ app.post('/api/signup', async (req, res) => {
     }
 
     console.error('Signup error:', error.message);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to complete signup'
@@ -146,7 +165,13 @@ app.post('/api/login', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
 
     const result = await pool.query(
-      `SELECT id, full_name, email, mobile, password, "createdAt"
+      `SELECT
+         id,
+         full_name,
+         email,
+         mobile,
+         password,
+         "createdAt"
        FROM public.users
        WHERE email = $1
        LIMIT 1`,
@@ -175,6 +200,7 @@ app.post('/api/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error.message);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to complete login'
@@ -182,13 +208,24 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Vercel's Express integration uses this exported app.
+// Do not expose all registered users publicly.
+
+// Unknown API routes
+app.use('/api', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found'
+  });
+});
+
+// Export Express app for Vercel
 module.exports = app;
 
-// Allow local development with: npm start
+// Start a local server only when running directly
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
+
   app.listen(PORT, () => {
-    console.log(`COCOONInn API running on port ${PORT}`);
+    console.log(`COCOONInn server running on port ${PORT}`);
   });
 }
