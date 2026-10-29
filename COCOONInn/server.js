@@ -1,202 +1,194 @@
+
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const Database = require('PostgreSQL');
+const { Pool } = require('pg');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize SQLite database
-const dbPath = path.join(__dirname, 'users.db');
-const db = new Database(dbPath);
+// PostgreSQL connection: use Supabase's transaction pooler URI.
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is missing');
+}
 
-// Create users table if it doesn't exist
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fullName TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    mobile TEXT NOT NULL,
-    password TEXT NOT NULL,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 1,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 10000
+});
 
-// Helper function to hash passwords
-const hashPassword = async (password) => {
-  const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
-};
+// Check the database connection without creating tables at startup.
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({
+      success: true,
+      message: 'COCOONInn API and database are running',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Database health check failed:', error.message);
+    res.status(503).json({
+      success: false,
+      message: 'Database connection failed'
+    });
+  }
+});
 
-// Helper function to compare passwords
-const comparePassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
-};
-
-// Signup endpoint
+// Signup
 app.post('/api/signup', async (req, res) => {
   try {
     const { fullName, email, mobile, password } = req.body;
 
-    // Validation
-    if (!fullName || !email || !mobile || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'All fields are required' 
+    if (
+      typeof fullName !== 'string' ||
+      typeof email !== 'string' ||
+      typeof mobile !== 'string' ||
+      typeof password !== 'string' ||
+      !fullName.trim() ||
+      !email.trim() ||
+      !mobile.trim() ||
+      !password
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
       });
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid email format' 
+    const cleanName = fullName.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanMobile = mobile.replace(/\D/g, '');
+
+    if (cleanName.length > 150 || cleanEmail.length > 254) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name or email is too long'
       });
     }
 
-    // Mobile validation (basic)
-    const mobileRegex = /^[0-9]{10}$/;
-    if (!mobileRegex.test(mobile.replace(/\D/g, ''))) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid mobile number format' 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
       });
     }
 
-    // Password validation (minimum 6 characters)
-    if (password.length < 6) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Password must be at least 6 characters long' 
+    if (!/^\d{10}$/.test(cleanMobile)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Enter a valid 10-digit mobile number'
       });
     }
 
-    // Check if user already exists
-    const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-    if (existingUser) {
-      return res.status(409).json({ 
-        success: false, 
-        message: 'User with this email already exists' 
+    if (password.length < 6 || password.length > 72) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be between 6 and 72 characters'
       });
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user into database
-    const stmt = db.prepare(`
-      INSERT INTO users (fullName, email, mobile, password) 
-      VALUES (?, ?, ?, ?)
-    `);
-    
-    const result = stmt.run(fullName, email, mobile, hashedPassword);
+    const result = await pool.query(
+      `INSERT INTO public.users (full_name, email, mobile, password)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, full_name AS "fullName", email, mobile,
+                 "createdAt" AS "createdAt"`,
+      [cleanName, cleanEmail, cleanMobile, hashedPassword]
+    );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      userId: result.lastInsertRowid
+      user: result.rows[0]
     });
   } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error. Please try again later.' 
+    if (error.code === '23505') {
+      return res.status(409).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    console.error('Signup error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to complete signup'
     });
   }
 });
 
-// Login endpoint
+// Login
 app.post('/api/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Email and password are required' 
+    if (
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      !email.trim() ||
+      !password
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
       });
     }
 
-    // Find user by email
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-    
-    if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid email or password' 
+    const cleanEmail = email.trim().toLowerCase();
+
+    const result = await pool.query(
+      `SELECT id, full_name, email, mobile, password, "createdAt"
+       FROM public.users
+       WHERE email = $1
+       LIMIT 1`,
+      [cleanEmail]
+    );
+
+    const user = result.rows[0];
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
       });
     }
 
-    // Compare passwords
-    const isPasswordValid = await comparePassword(password, user.password);
-    
-    if (!isPasswordValid) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid email or password' 
-      });
-    }
-
-    // Return user data (excluding password)
-    const { password: _, ...userWithoutPassword } = user;
-    
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Login successful',
-      user: userWithoutPassword
+      user: {
+        id: user.id,
+        fullName: user.full_name,
+        email: user.email,
+        mobile: user.mobile,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error. Please try again later.' 
+    console.error('Login error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to complete login'
     });
   }
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
+// Vercel's Express integration uses this exported app.
+module.exports = app;
+
+// Allow local development with: npm start
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`COCOONInn API running on port ${PORT}`);
   });
-});
-
-// Get all users (for testing - remove in production)
-app.get('/api/users', (req, res) => {
-  try {
-    const users = db.prepare('SELECT id, fullName, email, mobile, createdAt FROM users').all();
-    res.json({ 
-      success: true, 
-      users 
-    });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error fetching users' 
-    });
-  }
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 COCOONInn server is running on http://localhost:${PORT}`);
-  console.log(`📊 Database initialized at: ${dbPath}`);
-});
-
-// Graceful shutdown
-process.on('SIGINT', () => {
-  db.close();
-  console.log('\n👋 Server closed. Database connection closed.');
-  process.exit(0);
-});
+}
