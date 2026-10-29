@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>COCOONInn – Portable Capsule Hotels</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <style>
+    @font-face {
+      font-family: 'BigJohn';
+      src: url('fonts/BigJohn.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'SlimJoe';
+      src: url('fonts/SlimJoe.ttf') format('truetype');
+    }
+    :root {
+      --primary-light-blue: #89c7e0;
+      --accent-blue: #3388cc;
+      --golden: #b8860b;
+      --golden-light: #d4af37;
+      --bg-main: #ffffff;
+      --bg-light: #f0f8ff;
+      --text-dark: #111111;
+      --text-medium: #444444;
+      --border-light: #d0e0f0;
+    }
+    body {
+      font-family: 'Times New Roman', serif;
+      background: var(--bg-main);
+      color: var(--text-dark);
+      margin: 0;
+      padding: 0;
+    }
+    h1, h2, h3 {
+      font-family: 'BigJohn', 'SlimJoe', sans-serif;
+      letter-spacing: 0.05em;
+      color: var(--text-dark);
+    }
+    .auth-notch {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      padding: 0.5rem 2rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border-light);
+      border-top: none;
+    }
+    .auth-notch button {
+      background: transparent;
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      padding: 0.5rem 1.5rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: 'BigJohn', 'SlimJoe', sans-serif;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+    .auth-notch button:hover {
+      background: var(--accent-blue);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(51, 136, 204, 0.3);
+    }
+    .auth-modal {
+      display: none;
+      position: fixed;
+      z-index: 100000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+    }
+    .auth-modal-content {
+      background-color: var(--bg-main);
+      margin: 10% auto;
+      padding: 2.5rem;
+      border: 1px solid var(--border-light);
+      width: 90%;
+      max-width: 450px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    .auth-modal-content h2 {
+      font-family: 'BigJohn', 'SlimJoe', sans-serif;
+      margin: 0 0 1.5rem;
+      font-size: 2rem;
+      color: var(--text-dark);
+      text-align: center;
+    }
+    .auth-form-group {
+      margin-bottom: 1.5rem;
+    }
+    .auth-form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-medium);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .auth-form-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: 'Times New Roman', serif;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+    .auth-form-group input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(51, 136, 204, 0.1);
+    }
+    .auth-form-group .forgot-password {
+      text-align: right;
+      margin-top: 0.5rem;
+    }
+    .auth-form-group .forgot-password a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.3s ease;
+    }
+    .auth-form-group .forgot-password a:hover {
+      color: var(--golden);
+    }
+    .auth-submit-btn {
+      width: 100%;
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-family: 'BigJohn', 'SlimJoe', sans-serif;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+    }
+    .auth-submit-btn:hover {
+      background: #2673b3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(51, 136, 204, 0.3);
+    }
+    .auth-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--text-medium);
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+    .auth-close:hover {
+      color: var(--accent-blue);
+    }
+    .auth-message {
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .auth-message.success {
+      background: rgba(137, 199, 224, 0.2);
+      color: var(--accent-blue);
+      border: 1px solid var(--primary-light-blue);
+    }
+    .auth-message.error {
+      background: rgba(255, 0, 0, 0.1);
+      color: #cc3333;
+      border: 1px solid #ff6666;
+    }
+    header {
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--border-light);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 45px;
+      z-index: 1000;
+      transition: box-shadow 0.3s ease, background 0.3s ease;
+    }
+    header.scrolled {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #000;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s ease;
+    }
+    .logo:hover {
+      color: var(--golden);
+    }
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-dark);
+    }
+    nav {
+      display: flex;
+      align-items: center;
+    }
+    nav a {
+      margin: 0 1rem;
+      text-decoration: none;
+      color: var(--text-dark);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      position: relative;
+      transition: color 0.3s ease;
+      padding: 0.5rem 0;
+    }
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--golden);
+      transition: width 0.4s ease;
+    }
+    nav a:hover {
+      color: var(--accent-blue);
+    }
+    nav a:hover::after {
+      width: 100%;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    section {
+      max-width: 1200px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .hero {
+      text-align: center;
+      padding: 6rem 1.5rem 4rem;
+      background: linear-gradient(to bottom, #ffffff, var(--bg-light));
+    }
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, var(--accent-blue), var(--golden));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-medium);
+      max-width: 800px;
+      margin: 0 auto 2rem;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin: 2rem 0;
+    }
+    .pill {
+      background: var(--primary-light-blue);
+      color: #111;
+      padding: 0.7rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      transition: all 0.4s ease;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    }
+    .pill:hover {
+      background: var(--accent-blue);
+      color: white;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(51, 136, 204, 0.2);
+    }
+    .two-col {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3rem;
+      margin-top: 2rem;
+    }
+    .two-col > div {
+      flex: 1 1 300px;
+    }
+    .highlight-box, .info-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border-light);
+      padding: 1.8rem;
+      border-radius: 14px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.04);
+      transition: all 0.4s ease;
+    }
+    .highlight-box:hover, .info-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(51, 136, 204, 0.18);
+      border-color: var(--accent-blue);
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.8rem;
+      margin-top: 2rem;
+    }
+    .product-image {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .product-image img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transition: transform 0.6s ease;
+      margin-bottom: 1.5rem;
+    }
+    .product-image img:hover {
+      transform: scale(1.05);
+    }
+    footer {
+      background: var(--bg-light);
+      padding: 3rem 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text-medium);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--border-light);
+    }
+    .footer-left {
+      max-width: 400px;
+    }
+    .footer-right {
+      text-align: right;
+    }
+    .booking-bar-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      position: relative;
+      z-index: 100;
+    }
+    .booking-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .booking-tab {
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+    .booking-tab.active {
+      background: #000;
+      color: #fff;
+    }
+    .booking-tab.inactive {
+      background: transparent;
+      color: #000;
+      border: 1px solid #ddd;
+    }
+    .booking-form {
+      display: flex;
+      background: #fff;
+      border-radius: 999px;
+      padding: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
+      align-items: center;
+      overflow: visible;
+      z-index: 10;
+    }
+    .booking-field {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-right: 1px solid var(--border-light);
+      position: relative;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-medium);
+      text-align: center;
+      z-index: 1;
+    }
+    .booking-field.active {
+      z-index: 9999;
+    }
+    .booking-field:last-of-type {
+      border-right: none;
+    }
+    .booking-field input, .booking-field select {
+      border: none;
+      background: transparent;
+      width: 100%;
+      cursor: pointer;
+    }
+    .booking-search-btn {
+      background: var(--accent-blue);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      font-size: 1rem;
+      z-index: 1;
+    }
+    .booking-search-btn:hover {
+      background: #2673b3;
+      transform: scale(1.05);
+    }
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 15px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      padding: 1.5rem;
+      z-index: 99999;
+      display: none;
+      width: 420px;
+      max-height: 70vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-light);
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+    .dropdown.active {
+      display: block;
+      animation: fadeInUp 0.3s ease;
+    }
+    .dropdown h4 {
+      margin: 0 0 0.8rem;
+      font-size: 1.1rem;
+      color: var(--text-dark);
+    }
+    .dropdown h3 {
+      margin: 1.5rem 0 0.8rem;
+      font-size: 1.2rem;
+      color: var(--text-dark);
+    }
+    .dropdown ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .dropdown li {
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-radius: 6px;
+    }
+    .dropdown li:hover {
+      background: var(--bg-light);
+    }
+    .dropdown li.selected {
+      background: var(--primary-light-blue);
+      color: #fff;
+    }
+    .time-tabs, .duration-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      justify-content: center;
+    }
+    .time-tab, .duration-tab {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      background: #f0f0f0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .time-tab.active, .duration-tab.active {
+      background: var(--primary-light-blue);
+      color: #fff;
+    }
+    .time-grid, .duration-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .time-grid div, .duration-grid div {
+      padding: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+      border-radius: 6px;
+    }
+    .time-grid div:hover, .duration-grid div:hover {
+      background: var(--bg-light);
+    }
+    .time-grid div.selected, .duration-grid div.selected {
+      background: var(--primary-light-blue);
+      color: #fff;
+    }
+    .guest-counter {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    .guest-counter button {
+      background: #f0f0f0;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    .guest-counter button:hover {
+      background: var(--primary-light-blue);
+      color: #fff;
+    }
+    .guest-counter span {
+      font-size: 1.2rem;
+      font-weight: bold;
+      min-width: 30px;
+      text-align: center;
+    }
+    .calendar {
+      text-align: center;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .calendar-header span {
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+    .calendar-header span:hover {
+      color: var(--accent-blue);
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+    .calendar-day {
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      border-radius: 6px;
+      min-height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .calendar-day:hover {
+      background: var(--bg-light);
+      transform: scale(1.05);
+    }
+    .calendar-day.selected {
+      background: var(--primary-light-blue);
+      color: #fff;
+      font-weight: bold;
+    }
+    .destinations {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-light);
+    }
+    .destination-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      justify-content: center;
+    }
+    .destination-tab {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      background: #000;
+      color: #fff;
+      font-size: 0.75rem;
+    }
+    .destination-img {
+      width: calc(33.33% - 0.5rem);
+      height: auto;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 0.25rem;
+      display: inline-block;
+      vertical-align: top;
+    }
+    .new-hero {
+      background: linear-gradient(to right, var(--bg-light), #fff);
+      padding-top: 0;
+      padding-bottom: 1rem;
+      position: relative;
+      z-index: 10;
+    }
+    .top-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    .top-banner-text {
+      flex: 1;
+    }
+    .top-banner-text h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      background: linear-gradient(to right, var(--accent-blue), var(--golden));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .top-banner-text p {
+      font-size: 1rem;
+      color: var(--text-medium);
+      margin: 0.5rem 0 0;
+    }
+    .top-banner-images {
+      display: flex;
+      gap: 1rem;
+    }
+    .top-banner-images img {
+      width: 200px;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 30px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      min-height: 300px;
+      text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal-content h2 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    .modal-content p {
+      font-size: 1.2rem;
+    }
+    .close-btn {
+      background: var(--accent-blue);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+    .close-btn:hover {
+      background: #2673b3;
+      transform: scale(1.05);
+    }
+    @media (max-width: 768px) {
+      header {
+        padding: 1rem;
+      }
+      section {
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      .hero {
+        padding: 4rem 1rem 2rem;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+      .hero p {
+        font-size: 1rem;
+      }
+      .pill {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+      .two-col {
+        gap: 2rem;
+      }
+      .cards-grid {
+        gap: 1.5rem;
+      }
+      .info-card, .highlight-box {
+        padding: 1.5rem;
+      }
+      footer {
+        padding: 2rem 1rem;
+      }
+      .top-banner-text h1 {
+        font-size: 2rem;
+      }
+      .top-banner-text p {
+        font-size: 0.9rem;
+      }
+      .top-banner-images img {
+        width: 150px;
+      }
+      .booking-bar-container {
+        padding: 1rem 1rem;
+      }
+      .booking-tab {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+      }
+      .booking-field {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+      }
+      .booking-search-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+      }
+      .dropdown {
+        position: fixed;
+        top: 50% !important;
+        bottom: auto !important;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      }
+      .time-grid, .duration-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .calendar-grid {
+        gap: 0.2rem;
+      }
+      .calendar-day {
+        padding: 0.4rem;
+        font-size: 0.9rem;
+      }
+      .destination-tab {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.8rem;
+      }
+      .destination-img {
+        width: calc(33.33% - 0.5rem);
+        margin: 0.25rem;
+      }
+    }
+    @media (max-width: 480px) {
+      .logo {
+        font-size: 1.5rem;
+      }
+      .hamburger {
+        display: block;
+      }
+      nav {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--bg-main);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid var(--border-light);
+      }
+      nav.active {
+        display: flex;
+      }
+      nav a {
+        margin: 0;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--border-light);
+        text-align: center;
+        font-size: 0.9rem;
+      }
+      .two-col {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      footer {
+        flex-direction: column;
+        text-align: center;
+      }
+      .footer-right {
+        margin-top: 1rem;
+        text-align: center;
+      }
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+      .hero p {
+        font-size: 0.9rem;
+      }
+      .top-banner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .top-banner-images {
+        flex-direction: column;
+        margin-top: 1rem;
+      }
+      .top-banner-images img {
+        width: 100%;
+        max-width: 300px;
+      }
+      .booking-tabs {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .booking-form {
+        flex-direction: column;
+        border-radius: 20px;
+        padding: 1rem;
+      }
+      .booking-field {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+        text-align: left;
+        padding: 0.75rem 0;
+        font-size: 0.85rem;
+        width: 100%;
+      }
+      .booking-field:last-of-type {
+        border-bottom: none;
+      }
+      .booking-search-btn {
+        margin-top: 1rem;
+        width: 100%;
+        padding: 0.75rem;
+      }
+      .dropdown {
+        width: 95%;
+        max-height: 85vh;
+        padding: 1rem;
+      }
+      .time-grid, .duration-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 0.5rem !important;
+      }
+      .time-grid div, .duration-grid div {
+        padding: 0.6rem 0.3rem;
+        font-size: 0.85rem;
+      }
+      .calendar-grid {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.1rem;
+      }
+      .calendar-day {
+        padding: 0.3rem;
+        font-size: 0.8rem;
+      }
+      .modal-content {
+        padding: 20px;
+        max-width: 90%;
+      }
+      .modal-content h2 {
+        font-size: 2rem;
+      }
+      .modal-content p {
+        font-size: 1rem;
+      }
+      .destination-img {
+        width: 100%;
+        margin: 0.25rem 0;
+      }
+      .auth-notch {
+        padding: 0.4rem 1.5rem;
+      }
+      .auth-notch button {
+        padding: 0.4rem 1rem;
+        font-size: 0.75rem;
+      }
+      .auth-modal-content {
+        padding: 2rem 1.5rem;
+        margin: 15% auto;
+      }
+      .auth-modal-content h2 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-notch">
+    <button id="login-btn">Login</button>
+    <button id="signup-btn">Sign Up</button>
+  </div>
+  <header id="header">
+    <a href="#hero-section" class="logo">COCOONInn</a>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <nav id="nav-menu">
+      <a href="#about">About</a>
+      <a href="#problem">Problem</a>
+      <a href="#solution">Solution</a>
+      <a href="#product">Product</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero new-hero" id="new-hero-section">
+      <div class="booking-bar-container">
+        <div class="top-banner">
+          <div class="top-banner-text">
+            <h1>New Age Affordable Luxury</h1>
+            <p>Capsule stays designed for short, efficient, and comfortable urban travel.</p>
+          </div>
+          <div class="top-banner-images">
+            <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/73/66/8c/18-foldable-tables-in.jpg?w=700&h=-1&s=1" alt="Luxury Capsule Interior 1">
+            <img src="https://www.telegraph.co.uk/content/dam/Travel/hotels/galleries/capsule-hotels/the-bed-klcc-kuala-lumpur-p.jpg?impolicy=OG-Standard" alt="Luxury Capsule Interior 2">
+          </div>
+        </div>
+        <div class="booking-tabs">
+          <div class="booking-tab active">Hourly Stays</div>
+          <div class="booking-tab inactive">Stays Per Night</div>
+        </div>
+        <form class="booking-form" id="booking-form">
+          <div class="booking-field" id="location-field">
+            <span>📍</span> Select Location <br> <span id="selected-location">Location</span>
+            <div class="dropdown" id="location-dropdown">
+              <h4>Our Hotels</h4>
+              <ul>
+                <li data-value="Mumbai">◯ Mumbai</li>
+                <li data-value="Delhi">◯ Delhi</li>
+                <li data-value="Bangalore">◯ Bangalore</li>
+                <li data-value="Hyderabad">◯ Hyderabad</li>
+                <li data-value="Ahmedabad">◯ Ahmedabad</li>
+                <li data-value="Chennai">◯ Chennai</li>
+                <li data-value="Kolkata">◯ Kolkata</li>
+                <li data-value="Surat">◯ Surat</li>
+                <li data-value="Pune">◯ Pune</li>
+                <li data-value="Jaipur">◯ Jaipur</li>
+                <li data-value="Lucknow">◯ Lucknow</li>
+                <li data-value="Kanpur">◯ Kanpur</li>
+                <li data-value="Nagpur">◯ Nagpur</li>
+                <li data-value="Indore">◯ Indore</li>
+                <li data-value="Thane">◯ Thane</li>
+                <li data-value="Bhopal">◯ Bhopal</li>
+                <li data-value="Visakhapatnam">◯ Visakhapatnam</li>
+                <li data-value="Pimpri-Chinchwad">◯ Pimpri-Chinchwad</li>
+                <li data-value="Patna">◯ Patna</li>
+                <li data-value="Vadodara">◯ Vadodara</li>
+                <li data-value="Ghaziabad">◯ Ghaziabad</li>
+                <li data-value="Ludhiana">◯ Ludhiana</li>
+                <li data-value="Agra">◯ Agra</li>
+                <li data-value="Nashik">◯ Nashik</li>
+                <li data-value="Faridabad">◯ Faridabad</li>
+                <li data-value="Meerut">◯ Meerut</li>
+                <li data-value="Rajkot">◯ Rajkot</li>
+                <li data-value="Kalyan-Dombivli">◯ Kalyan-Dombivli</li>
+                <li data-value="Vasai-Virar">◯ Vasai-Virar</li>
+                <li data-value="Varanasi">◯ Varanasi</li>
+              </ul>
+              <div class="destinations">
+                <h3>Our Destinations</h3>
+                <div class="destination-tabs">
+                  <div class="destination-tab">Gurugram</div>
+                  <div class="destination-tab">Mumbai</div>
+                  <div class="destination-tab">Delhi</div>
+                  <div class="destination-tab">Bangalore</div>
+                  <div class="destination-tab">Hyderabad</div>
+                  <div class="destination-tab">Chennai</div>
+                  <div class="destination-tab">Kolkata</div>
+                  <div class="destination-tab">Pune</div>
+                </div>
+                <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/73/66/8c/18-foldable-tables-in.jpg?w=700&h=-1&s=1" alt="Capsule Hotel 1" class="destination-img">
+                <img src="https://www.telegraph.co.uk/content/dam/Travel/hotels/galleries/capsule-hotels/the-bed-klcc-kuala-lumpur-p.jpg?impolicy=OG-Standard" alt="Capsule Hotel 2" class="destination-img">
+                <img src="https://i.huffpost.com/gen/1995486/thumbs/o-SB-570.jpg?2" alt="Capsule Hotel 3" class="destination-img">
+              </div>
+            </div>
+          </div>
+          <div class="booking-field" id="checkin-field">
+            <span>📅</span> Check in <br> <span id="selected-date">Date</span>
+            <div class="dropdown" id="checkin-dropdown">
+              <div class="calendar">
+                <div class="calendar-header">
+                  <span class="prev-month">&lt;</span> <span id="current-month">January 2026</span> <span class="next-month">&gt;</span>
+                </div>
+                <div class="calendar-grid">
+                  <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                </div>
+              </div>
+              <div class="destinations">
+                <h3>Our Destinations</h3>
+                <div class="destination-tabs">
+                  <div class="destination-tab">Gurugram</div>
+                  <div class="destination-tab">Mumbai</div>
+                  <div class="destination-tab">Delhi</div>
+                  <div class="destination-tab">Bangalore</div>
+                  <div class="destination-tab">Hyderabad</div>
+                  <div class="destination-tab">Chennai</div>
+                  <div class="destination-tab">Kolkata</div>
+                  <div class="destination-tab">Pune</div>
+                </div>
+                <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/73/66/8c/18-foldable-tables-in.jpg?w=700&h=-1&s=1" alt="Capsule Hotel 1" class="destination-img">
+                <img src="https://www.telegraph.co.uk/content/dam/Travel/hotels/galleries/capsule-hotels/the-bed-klcc-kuala-lumpur-p.jpg?impolicy=OG-Standard" alt="Capsule Hotel 2" class="destination-img">
+                <img src="https://i.huffpost.com/gen/1995486/thumbs/o-SB-570.jpg?2" alt="Capsule Hotel 3" class="destination-img">
+              </div>
+            </div>
+          </div>
+          <div class="booking-field" id="arrival-field">
+            <span>⏰</span> Arrival <br> <span id="selected-time">Time</span>
+            <div class="dropdown" id="arrival-dropdown">
+              <h4>Arrival Time</h4>
+              <div class="time-tabs">
+                <div class="time-tab active" data-ampm="AM">AM</div>
+                <div class="time-tab" data-ampm="PM">PM</div>
+              </div>
+              <div class="time-grid" id="time-grid">
+              </div>
+              <div class="destinations">
+                <h3>Our Destinations</h3>
+                <div class="destination-tabs">
+                  <div class="destination-tab">Gurugram</div>
+                  <div class="destination-tab">Mumbai</div>
+                  <div class="destination-tab">Delhi</div>
+                  <div class="destination-tab">Bangalore</div>
+                  <div class="destination-tab">Hyderabad</div>
+                  <div class="destination-tab">Chennai</div>
+                  <div class="destination-tab">Kolkata</div>
+                  <div class="destination-tab">Pune</div>
+                </div>
+                <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/73/66/8c/18-foldable-tables-in.jpg?w=700&h=-1&s=1" alt="Capsule Hotel 1" class="destination-img">
+                <img src="https://www.telegraph.co.uk/content/dam/Travel/hotels/galleries/capsule-hotels/the-bed-klcc-kuala-lumpur-p.jpg?impolicy=OG-Standard" alt="Capsule Hotel 2" class="destination-img">
+                <img src="https://i.huffpost.com/gen/1995486/thumbs/o-SB-570.jpg?2" alt="Capsule Hotel 3" class="destination-img">
+              </div>
+            </div>
+          </div>
+          <div class="booking-field" id="stay-field">
+            <span>⏳</span> Stay <br> <span id="selected-duration">Duration</span>
+            <div class="dropdown" id="stay-dropdown">
+              <div class="duration-tabs">
+                <div class="duration-tab active" data-range="below">BELOW 12 HRS</div>
+                <div class="duration-tab" data-range="above">ABOVE 12 HRS</div>
+              </div>
+              <div class="duration-grid" id="duration-grid">
+              </div>
+              <div class="destinations">
+                <h3>Our Destinations</h3>
+                <div class="destination-tabs">
+                  <div class="destination-tab">Gurugram</div>
+                  <div class="destination-tab">Mumbai</div>
+                  <div class="destination-tab">Delhi</div>
+                  <div class="destination-tab">Bangalore</div>
+                  <div class="destination-tab">Hyderabad</div>
+                  <div class="destination-tab">Chennai</div>
+                  <div class="destination-tab">Kolkata</div>
+                  <div class="destination-tab">Pune</div>
+                </div>
+                <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/73/66/8c/18-foldable-tables-in.jpg?w=700&h=-1&s=1" alt="Capsule Hotel 1" class="destination-img">
+                <img src="https://www.telegraph.co.uk/content/dam/Travel/hotels/galleries/capsule-hotels/the-bed-klcc-kuala-lumpur-p.jpg?impolicy=OG-Standard" alt="Capsule Hotel 2" class="destination-img">
+                <img src="https://i.huffpost.com/gen/1995486/thumbs/o-SB-570.jpg?2" alt="Capsule Hotel 3" class="destination-img">
+              </div>
+            </div>
+          </div>
+          <div class="booking-field" id="guests-field">
+            <span>👥 +</span> Guests <br> <span id="selected-guests">Add guests</span>
+            <div class="dropdown" id="guests-dropdown">
+              <h4>Adults</h4>
+              <p>Ages 12 or above</p>
+              <div class="guest-counter">
+                <button type="button" id="guest-minus">-</button> <span id="guest-count">0</span> <button type="button" id="guest-plus">+</button>
+              </div>
+              <div class="destinations">
+                <h3>Our Destinations</h3>
+                <div class="destination-tabs">
+                  <div class="destination-tab">Gurugram</div>
+                  <div class="destination-tab">Mumbai</div>
+                  <div class="destination-tab">Delhi</div>
+                  <div class="destination-tab">Bangalore</div>
+                  <div class="destination-tab">Hyderabad</div>
+                  <div class="destination-tab">Chennai</div>
+                  <div class="destination-tab">Kolkata</div>
+                  <div class="destination-tab">Pune</div>
+                </div>
+                <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/73/66/8c/18-foldable-tables-in.jpg?w=700&h=-1&s=1" alt="Capsule Hotel 1" class="destination-img">
+                <img src="https://www.telegraph.co.uk/content/dam/Travel/hotels/galleries/capsule-hotels/the-bed-klcc-kuala-lumpur-p.jpg?impolicy=OG-Standard" alt="Capsule Hotel 2" class="destination-img">
+                <img src="https://i.huffpost.com/gen/1995486/thumbs/o-SB-570.jpg?2" alt="Capsule Hotel 3" class="destination-img">
+              </div>
+            </div>
+          </div>
+          <button type="button" class="booking-search-btn" id="search-btn">🔍 Search</button>
+        </form>
+      </div>
+    </section>
+    <div id="coming-soon-modal" class="modal">
+      <div class="modal-content">
+        <h2>Coming Soon 🚀</h2>
+        <p>We are currently in our launch phase.</p>
+        <button class="close-btn" id="close-modal">Close</button>
+      </div>
+    </div>
+    <div id="login-modal" class="auth-modal">
+      <div class="auth-modal-content">
+        <span class="auth-close" id="close-login">&times;</span>
+        <h2>Login</h2>
+        <div id="login-message" class="auth-message"></div>
+        <form id="login-form">
+          <div class="auth-form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" required>
+          </div>
+          <div class="auth-form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" required>
+            <div class="forgot-password">
+              <a href="#" id="forgot-password-link">Forgot password?</a>
+            </div>
+          </div>
+          <button type="submit" class="auth-submit-btn">Login</button>
+        </form>
+      </div>
+    </div>
+    <div id="signup-modal" class="auth-modal">
+      <div class="auth-modal-content">
+        <span class="auth-close" id="close-signup">&times;</span>
+        <h2>Sign Up</h2>
+        <div id="signup-message" class="auth-message"></div>
+        <form id="signup-form">
+          <div class="auth-form-group">
+            <label for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" name="fullName" required>
+          </div>
+          <div class="auth-form-group">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" name="email" required>
+          </div>
+          <div class="auth-form-group">
+            <label for="signup-mobile">Mobile No.</label>
+            <input type="tel" id="signup-mobile" name="mobile" required>
+          </div>
+          <div class="auth-form-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" name="password" required>
+          </div>
+          <button type="submit" class="auth-submit-btn">Sign Up</button>
+        </form>
+      </div>
+    </div>
+    <section class="hero" id="hero-section">
+      <h1>Capsule stays that move with your city</h1>
+      <p>
+        COCOONInn is a portable hotel chain built with modular, container-based structures.
+        Designed for short-term guests at railway stations, airports, and other transient hubs,
+        it provides comfortable, private stays where permanent buildings aren't practical or sustainable.
+      </p>
+      <div class="pill-row">
+        <div class="pill">Portable Hotel Units</div>
+        <div class="pill">Capsule Pods</div>
+        <div class="pill">Short Stays</div>
+      </div>
+    </section>
+    <section id="about">
+      <h2>About COCOONInn</h2>
+      <p>
+        Instead of building heavy, immovable hotels, COCOONInn runs on modular containers that host compact,
+        comfortable sleeping pods. This lets us operate in high-demand, high-rent pockets – from dense city centers
+        to transit hubs – without burning capital on permanent structures.
+      </p>
+      <div class="two-col">
+        <div>
+          <p>
+            Our franchise partners plug into a ready-made format: optimized layouts, shared amenities,
+            and a tech-first booking and access layer. Guests get privacy, essentials, and smart pricing.
+            Operators get higher yield per square foot and the freedom to move where the demand is.
+          </p>
+        </div>
+        <div class="highlight-box">
+          <h3>Core Concept</h3>
+          <p>
+            <strong>Container-based hotel-chain:</strong> Each COCOONInn unit is built inside standardized containers
+            that can be stacked, clustered, and transported as needed.
+          </p>
+          <p>
+            <strong>Capsule-first design:</strong> Vertically stacked pods, shared utilities, and smart circulation
+            maximize guest capacity in minimal space.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section id="problem">
+      <h2>The Problem</h2>
+      <p>
+        High accommodation cost. Long, uncomfortable waits for delayed transport.
+        Paying for a full day when you only need a few hours. These are everyday
+        realities for travelers worldwide.
+      </p>
+      <div class="pill-row">
+        <div class="pill">High Cost</div>
+        <div class="pill">Space Crunch</div>
+        <div class="pill">Short Stays</div>
+      </div>
+      <div class="cards-grid">
+        <div class="info-card">
+          <h3>01 · High accommodation costs</h3>
+          <p>
+            Prime-location hotels carry huge land and construction costs, which
+            flow directly into room prices. Short-stay and budget-conscious
+            travelers are priced out.
+          </p>
+        </div>
+        <div class="info-card">
+          <h3>02 · Space crunch drives up rates</h3>
+          <p>
+            Traditional hotel rooms are horizontal and spacious, resulting in
+            fewer guests per floor and forcing operators to push tariffs higher.
+          </p>
+        </div>
+        <div class="info-card">
+          <h3>03 · All-or-nothing pricing</h3>
+          <p>
+            During delays or layovers, travelers only need a clean bed, storage,
+            Wi‑Fi, and a shower. Instead, they are pushed into full-day bookings.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section id="solution">
+      <h2>The COCOONInn Solution</h2>
+      <p>
+        COCOONInn uses capsule pods and container-based structures to create a
+        new category of truly flexible hotels – designed for short, efficient
+        stays instead of full-day lock-ins.
+      </p>
+      <div class="two-col">
+        <div>
+          <div class="cards-grid">
+            <div class="info-card">
+              <h3>Cost-effective capsule hotels</h3>
+              <p>
+                Capsules focus on essentials: bed, storage, ventilation, lighting,
+                privacy, power. By eliminating wasted space, COCOONInn can offer
+                stays at much lower prices than conventional hotels.
+              </p>
+            </div>
+            <div class="info-card">
+              <h3>Space-optimized layouts</h3>
+              <p>
+                Vertically stacked pods and shared facilities increase guests per
+                container. More revenue per footprint – without needing to build
+                large permanent structures.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box">
+          <h3>Portability & Flexibility</h3>
+          <p>
+            COCOONInn is built as a <strong>container-based hotel-chain</strong>.
+            Each property is made of modular containers housing pods, utilities,
+            and service zones.
+          </p>
+          <p>
+            If demand shifts, regulations change, or a better transit hub opens,
+            the entire hotel can be <strong>moved</strong>. No demolition, no dead
+            real estate – just redeployment.
+          </p>
+          <p>
+            That portability gives operators and franchise partners a significant
+            hedge against location risk.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section id="product">
+      <h2>Product & Usage</h2>
+      <p>
+        COCOONInn is optimized for short-term, high-rotation stays – powered by a
+        tech layer that keeps operations lean and transparent.
+      </p>
+      <div class="two-col">
+        <div>
+          <div class="info-card">
+            <h3>Guest Journey</h3>
+            <p>
+              Guests arrive at a transit node or city pocket, book a pod for
+              3–24 hours, access via digital credentials, rest, shower, charge
+              devices, and leave – without paying for unused hours.
+            </p>
+          </div>
+          <div class="info-card">
+            <h3>Profitability</h3>
+            <p>
+              Higher pod density and short-stay rotation mean more revenue per
+              container. This asset-light model enables faster payback for
+              franchise partners.
+            </p>
+          </div>
+          <div class="info-card">
+            <h3>Tech Layer</h3>
+            <p>
+              Time-based pricing, pod allocation logic, digital keys, and
+              dashboards for occupancy and revenue – all built to keep operations
+              predictable and scalable.
+            </p>
+          </div>
+        </div>
+        <div class="product-image">
+          <img src="https://cloudfront-us-east-1.images.arcpublishing.com/bostonglobe/YZLMDERKXJAD3GUBC5AJ2TNK2U.jpg" alt="Modern capsule pod interior – clean and comfortable" />
+          <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/73/66/8c/18-foldable-tables-in.jpg?w=700&h=-1&s=1" alt="Capsule pod with smart features" />
+          <img src="https://www.telegraph.co.uk/content/dam/Travel/hotels/galleries/capsule-hotels/the-bed-klcc-kuala-lumpur-p.jpg?impolicy=OG-Standard" alt="Stacked capsule pods in modular setup" />
+          <img src="https://i.huffpost.com/gen/1995486/thumbs/o-SB-570.jpg?2" alt="Portable shipping container capsule hotel" />
+          <img src="https://image.made-in-china.com/202f0j00asQkBrmKAFpD/Mobile-Tiny-Container-House-40FT-Space-Capsule-Hotel-Smart-Cabin-Mobile-Home.webp" alt="Modular capsule unit at transit location" />
+          <p style="font-size:0.85rem; color:#666; margin-top:1rem;">
+            Visual examples of modern portable capsule hotel designs.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section id="contact">
+      <h2>Contact & Franchise</h2>
+      <p>
+        Whether you manage a transit hub, a dense urban pocket, or an upcoming event corridor,
+        COCOONInn can plug in as a portable, capsule-first stay option.
+      </p>
+      <div class="two-col">
+        <div class="highlight-box">
+          <h3>Direct Details</h3>
+          <p><strong>Location:</strong> Cyber City, Gurugram, Haryana, India</p>
+          <p><strong>Phone:</strong> +91 9773648769</p>
+          <p><strong>Email:</strong> info@cocooninnstays.com</p>
+          <p style="margin-top:1rem;">
+            Share a brief about your site, approximate daily footfall, and available space.
+            We'll help you understand if a COCOONInn capsule hotel is the right fit.
+          </p>
+        </div>
+        <div>
+          <p>
+            COCOONInn is designed to live where traditional hotels struggle:
+            between platforms, beside runways, near office clusters, and close to event grounds.
+          </p>
+          <p>
+            Our goal is simple – to make waiting more human, affordable, and efficient.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div class="footer-left">
+      <strong>COCOONInn</strong><br>
+      Portable, container-based capsule hotels for high-demand urban and transit locations.
+    </div>
+    <div class="footer-right">
+      <div>Cyber City, Gurugram, Haryana, India</div>
+      <div>+91 9773648769</div>
+      <div>info@cocooninnstays.com</div>
+      <div>© 2025 COCOONInn. All rights reserved.</div>
+    </div>
+  </footer>
+  <script>
+    function toggleMenu() {
+      document.getElementById('nav-menu').classList.toggle('active');
+    }
+    const sections = document.querySelectorAll('section');
+    const header = document.getElementById('header');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    sections.forEach(sec => observer.observe(sec));
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    const fields = ['location', 'checkin', 'arrival', 'stay', 'guests'];
+    fields.forEach(field => {
+      const fieldElem = document.getElementById(`${field}-field`);
+      const dropdown = document.getElementById(`${field}-dropdown`);
+      fieldElem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fields.forEach(f => {
+          const fElem = document.getElementById(`${f}-field`);
+          const dElem = document.getElementById(`${f}-dropdown`);
+          if (f !== field) {
+            dElem.classList.remove('active');
+            fElem.classList.remove('active');
+          }
+        });
+        dropdown.classList.toggle('active');
+        fieldElem.classList.toggle('active');
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.booking-field')) {
+        fields.forEach(field => {
+          document.getElementById(`${field}-dropdown`).classList.remove('active');
+          document.getElementById(`${field}-field`).classList.remove('active');
+        });
+      }
+    });
+
+    const locationList = document.querySelectorAll('#location-dropdown li');
+    locationList.forEach(li => {
+      li.addEventListener('click', () => {
+        locationList.forEach(l => l.classList.remove('selected'));
+        li.classList.add('selected');
+        document.getElementById('selected-location').textContent = li.dataset.value;
+      });
+    });
+
+    const guestCount = document.getElementById('guest-count');
+    document.getElementById('guest-minus').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (parseInt(guestCount.textContent) > 0) {
+        guestCount.textContent = parseInt(guestCount.textContent) - 1;
+        document.getElementById('selected-guests').textContent = `${guestCount.textContent} guests`;
+      }
+    });
+    document.getElementById('guest-plus').addEventListener('click', (e) => {
+      e.preventDefault();
+      guestCount.textContent = parseInt(guestCount.textContent) + 1;
+      document.getElementById('selected-guests').textContent = `${guestCount.textContent} guests`;
+    });
+
+    const timeTabs = document.querySelectorAll('.time-tab');
+    timeTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        timeTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        updateTimeGrid(tab.dataset.ampm);
+      });
+    });
+    function updateTimeGrid(ampm) {
+      const grid = document.getElementById('time-grid');
+      grid.innerHTML = '';
+      for (let h = 0; h < 12; h++) {
+        const hour = h === 0 ? 12 : h < 10 ? '0' + h : h;
+        const div = document.createElement('div');
+        div.dataset.time = `${hour} ${ampm}`;
+        div.textContent = `${hour} ${ampm}`;
+        div.addEventListener('click', () => {
+          const timeSlots = grid.querySelectorAll('div');
+          timeSlots.forEach(s => s.classList.remove('selected'));
+          div.classList.add('selected');
+          document.getElementById('selected-time').textContent = div.dataset.time;
+        });
+        grid.appendChild(div);
+      }
+    }
+    updateTimeGrid('AM');
+
+    const durationTabs = document.querySelectorAll('.duration-tab');
+    durationTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        durationTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        updateDurationGrid(tab.dataset.range);
+      });
+    });
+    function updateDurationGrid(range) {
+      const grid = document.getElementById('duration-grid');
+      grid.innerHTML = '';
+      let start = range === 'below' ? 1 : 13;
+      let end = range === 'below' ? 12 : 24;
+      for (let h = start; h <= end; h++) {
+        const hour = h < 10 ? '0' + h : h;
+        const div = document.createElement('div');
+        div.dataset.duration = `${hour} HRS`;
+        div.textContent = `${hour} HRS`;
+        div.addEventListener('click', () => {
+          const durationSlots = grid.querySelectorAll('div');
+          durationSlots.forEach(s => s.classList.remove('selected'));
+          div.classList.add('selected');
+          document.getElementById('selected-duration').textContent = div.dataset.duration;
+        });
+        grid.appendChild(div);
+      }
+    }
+    updateDurationGrid('below');
+
+    let currentDate = new Date(2026, 0, 1);
+    function generateCalendar() {
+      const grid = document.querySelector('.calendar-grid');
+      grid.innerHTML = '<div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>';
+      const month = currentDate.getMonth();
+      const year = currentDate.getFullYear();
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        grid.appendChild(empty);
+      }
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayElem = document.createElement('div');
+        dayElem.classList.add('calendar-day');
+        dayElem.textContent = day;
+        dayElem.dataset.day = day;
+        grid.appendChild(dayElem);
+      }
+      document.getElementById('current-month').textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+      const dayElems = document.querySelectorAll('.calendar-day');
+      dayElems.forEach(day => {
+        day.addEventListener('click', () => {
+          dayElems.forEach(d => d.classList.remove('selected'));
+          day.classList.add('selected');
+          document.getElementById('selected-date').textContent = `${day.dataset.day}/${month + 1}/${year}`;
+        });
+      });
+    }
+    generateCalendar();
+    document.querySelector('.prev-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      generateCalendar();
+    });
+    document.querySelector('.next-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      generateCalendar();
+    });
+
+    const modal = document.getElementById('coming-soon-modal');
+    const closeModal = document.getElementById('close-modal');
+    document.getElementById('search-btn').addEventListener('click', () => {
+      modal.style.display = 'block';
+    });
+    closeModal.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+      if (e.target == modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    // Authentication modals
+    const loginModal = document.getElementById('login-modal');
+    const signupModal = document.getElementById('signup-modal');
+    const loginBtn = document.getElementById('login-btn');
+    const signupBtn = document.getElementById('signup-btn');
+    const closeLogin = document.getElementById('close-login');
+    const closeSignup = document.getElementById('close-signup');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const loginMessage = document.getElementById('login-message');
+    const signupMessage = document.getElementById('signup-message');
+
+    loginBtn.addEventListener('click', () => {
+      loginModal.style.display = 'block';
+      signupModal.style.display = 'none';
+    });
+
+    signupBtn.addEventListener('click', () => {
+      signupModal.style.display = 'block';
+      loginModal.style.display = 'none';
+    });
+
+    closeLogin.addEventListener('click', () => {
+      loginModal.style.display = 'none';
+      loginMessage.style.display = 'none';
+      loginForm.reset();
+    });
+
+    closeSignup.addEventListener('click', () => {
+      signupModal.style.display = 'none';
+      signupMessage.style.display = 'none';
+      signupForm.reset();
+    });
+
+    window.addEventListener('click', (e) => {
+      if (e.target == loginModal) {
+        loginModal.style.display = 'none';
+        loginMessage.style.display = 'none';
+        loginForm.reset();
+      }
+      if (e.target == signupModal) {
+        signupModal.style.display = 'none';
+        signupMessage.style.display = 'none';
+        signupForm.reset();
+      }
+    });
+
+    // Login form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const response = await fetch('http://localhost:3000/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          loginMessage.textContent = 'Login successful!';
+          loginMessage.className = 'auth-message success';
+          loginMessage.style.display = 'block';
+          setTimeout(() => {
+            loginModal.style.display = 'none';
+            loginForm.reset();
+            loginMessage.style.display = 'none';
+          }, 1500);
+        } else {
+          loginMessage.textContent = data.message || 'Login failed. Please try again.';
+          loginMessage.className = 'auth-message error';
+          loginMessage.style.display = 'block';
+        }
+      } catch (error) {
+        loginMessage.textContent = 'Connection error. Please try again.';
+        loginMessage.className = 'auth-message error';
+        loginMessage.style.display = 'block';
+      }
+    });
+
+    // Signup form submission
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const mobile = document.getElementById('signup-mobile').value;
+      const password = document.getElementById('signup-password').value;
+
+      try {
+        const response = await fetch('http://localhost:3000/api/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fullName, email, mobile, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          signupMessage.textContent = 'Sign up successful! Welcome to COCOONInn.';
+          signupMessage.className = 'auth-message success';
+          signupMessage.style.display = 'block';
+          setTimeout(() => {
+            signupModal.style.display = 'none';
+            signupForm.reset();
+            signupMessage.style.display = 'none';
+            loginModal.style.display = 'block';
+          }, 2000);
+        } else {
+          signupMessage.textContent = data.message || 'Sign up failed. Please try again.';
+          signupMessage.className = 'auth-message error';
+          signupMessage.style.display = 'block';
+        }
+      } catch (error) {
+        signupMessage.textContent = 'Connection error. Please try again.';
+        signupMessage.className = 'auth-message error';
+        signupMessage.style.display = 'block';
+      }
+    });
+
+    // Forgot password link
+    document.getElementById('forgot-password-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('Password reset feature coming soon!');
+    });
+  </script>
+</body>
